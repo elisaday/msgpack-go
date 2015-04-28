@@ -64,7 +64,7 @@ const (
 
 type Bytes []uint8
 
-func PackUInt64(writer io.Writer, value uint64) (ret int, err error) {
+func PackUInt64(writer io.Writer, value uint64) (count int, err error) {
 	switch {
 	case value <= MAX_7BIT:
 		return writer.Write(Bytes{MP_FIXNUM | uint8(value)})
@@ -82,13 +82,13 @@ func PackUInt64(writer io.Writer, value uint64) (ret int, err error) {
 	}
 }
 
-func PackInt64(writer io.Writer, value int64) (ret int, err error) {
+func PackInt64(writer io.Writer, value int64) (count int, err error) {
 	var n uint64
-	n = n
+	n = uint64(value)
 	if value >= 0 {
 		switch {
 		case value <= MAX_7BIT:
-			return writer.Write(Bytes{uint8(n)})
+			return writer.Write(Bytes{MP_FIXNUM | uint8(n)})
 		case value <= MAX_15BIT:
 			return writer.Write(Bytes{MP_INT16, uint8(uint64(n) >> 8), uint8(n)})
 		case value <= MAX_31BIT:
@@ -119,7 +119,7 @@ func PackInt64(writer io.Writer, value int64) (ret int, err error) {
 	}
 }
 
-func PackBool(writer io.Writer, value bool) (ret int, err error) {
+func PackBool(writer io.Writer, value bool) (count int, err error) {
 	if value {
 		return writer.Write(Bytes{MP_TRUE})
 	} else {
@@ -127,14 +127,14 @@ func PackBool(writer io.Writer, value bool) (ret int, err error) {
 	}
 }
 
-func PackFloat(writer io.Writer, value float32) (ret int, err error) {
+func PackFloat(writer io.Writer, value float32) (count int, err error) {
 	var n uint32
 	n = math.Float32bits(value)
 	return writer.Write(Bytes{MP_FLOAT,
 		uint8(n >> 24), uint8(n >> 16), uint8(n >> 8), uint8(n)})
 }
 
-func PackDouble(writer io.Writer, value float64) (ret int, err error) {
+func PackDouble(writer io.Writer, value float64) (count int, err error) {
 	var n uint64
 	n = math.Float64bits(value)
 	return writer.Write(Bytes{MP_DOUBLE,
@@ -142,7 +142,7 @@ func PackDouble(writer io.Writer, value float64) (ret int, err error) {
 		uint8(n >> 24), uint8(n >> 16), uint8(n >> 8), uint8(n)})
 }
 
-func PackRawBuffer(writer io.Writer, value []uint8) (ret int, err error) {
+func PackRawBuffer(writer io.Writer, value []uint8) (count int, err error) {
 	var length uint64
 	length = uint64(len(value))
 	var n int
