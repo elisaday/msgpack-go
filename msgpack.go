@@ -82,6 +82,10 @@ func PackUInt64(writer io.Writer, value uint64) (count int, err error) {
 	}
 }
 
+func PackUInt32(writer io.Writer, value uint32) (count int, err error) {
+	return PackUInt64(writer, uint64(value))
+}
+
 func PackInt64(writer io.Writer, value int64) (count int, err error) {
 	var n uint64
 	n = uint64(value)
@@ -117,6 +121,10 @@ func PackInt64(writer io.Writer, value int64) (count int, err error) {
 				uint8(n >> 24), uint8(n >> 16), uint8(n >> 8), uint8(n)})
 		}
 	}
+}
+
+func PackInt32(writer io.Writer, value int32) (count int, err error) {
+	return PackInt64(writer, int64(value))
 }
 
 func PackBool(writer io.Writer, value bool) (count int, err error) {
