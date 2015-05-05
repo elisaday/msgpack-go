@@ -215,22 +215,20 @@ func UnpackUInt64(buf []byte, offset *uint32) (val uint64, err error) {
 		if int(*offset) > len(buf) {
 			return 0, ErrUnpackOverflow
 		}
-		return (uint64(buf[off]) << 24) | (uint64(buf[off+1]) << 16) | 
+		return (uint64(buf[off]) << 24) | (uint64(buf[off+1]) << 16) |
 			(uint64(buf[off+2]) << 8) | uint64(buf[off+3]), nil
 	case MP_UINT64:
 		(*offset) += 8
 		if int(*offset) > len(buf) {
 			return 0, ErrUnpackOverflow
 		}
-		return (uint64(buf[off]) << 56) | (uint64(buf[off+1]) << 48) | 
-			(uint64(buf[off+2]) << 40) | (uint64(buf[off+3]) << 32) | 
-			(uint64(buf[off+4]) << 24) | (uint64(buf[off+5]) << 16) | 
+		return (uint64(buf[off]) << 56) | (uint64(buf[off+1]) << 48) |
+			(uint64(buf[off+2]) << 40) | (uint64(buf[off+3]) << 32) |
+			(uint64(buf[off+4]) << 24) | (uint64(buf[off+5]) << 16) |
 			(uint64(buf[off+6]) << 8) | uint64(buf[off+7]), nil
 	default:
 		return 0, errors.New("invalid type header" + string(header))
 	}
-
-	return 0, nil
 }
 
 func UnpackInt64(buf []byte, offset *uint32) (val int64, err error) {
@@ -267,22 +265,20 @@ func UnpackInt64(buf []byte, offset *uint32) (val int64, err error) {
 		if int(*offset) > len(buf) {
 			return 0, ErrUnpackOverflow
 		}
-		return int64((int32(buf[off]) << 24) | (int32(buf[off+1]) << 16) | 
+		return int64((int32(buf[off]) << 24) | (int32(buf[off+1]) << 16) |
 			(int32(buf[off+2]) << 8) | int32(buf[off+3])), nil
 	case MP_INT64:
 		(*offset) += 8
 		if int(*offset) > len(buf) {
 			return 0, ErrUnpackOverflow
 		}
-		return (int64(buf[off]) << 56) | (int64(buf[off+1]) << 48) | 
-		(int64(buf[off+2]) << 40) | (int64(buf[off+3]) << 32) | 
-		(int64(buf[off+4]) << 24) | (int64(buf[off+5]) << 16) | 
-		(int64(buf[off+6]) << 8) | int64(buf[off+7]), nil
+		return (int64(buf[off]) << 56) | (int64(buf[off+1]) << 48) |
+			(int64(buf[off+2]) << 40) | (int64(buf[off+3]) << 32) |
+			(int64(buf[off+4]) << 24) | (int64(buf[off+5]) << 16) |
+			(int64(buf[off+6]) << 8) | int64(buf[off+7]), nil
 	default:
 		return 0, errors.New("invalid type header" + string(header))
 	}
-
-	return 0, nil
 }
 
 func UnpackUInt32(buf []byte, offset *uint32) (val uint32, err error) {
