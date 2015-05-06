@@ -387,7 +387,7 @@ func UnpackFloat(buf []byte, offset *uint32) (val float32, err error) {
 			return 0, ErrUnpackOverflow
 		}
 
-		v := (uint32(buf[off]) << 24) | (uint32(buf[off+1]) << 16) | 
+		v := (uint32(buf[off]) << 24) | (uint32(buf[off+1]) << 16) |
 			(uint32(buf[off+2]) << 8) | uint32(buf[off+3])
 		return math.Float32frombits(v), nil
 	}
@@ -408,9 +408,9 @@ func UnpackDouble(buf []byte, offset *uint32) (val float64, err error) {
 			return 0, ErrUnpackOverflow
 		}
 
-		v := (uint64(buf[off]) << 56) | (uint64(buf[off+1]) << 48) | 
-			(uint64(buf[off+2]) << 40) | (uint64(buf[off+3]) << 32) | 
-			(uint64(buf[off+4]) << 24) | (uint64(buf[off+5]) << 16) | 
+		v := (uint64(buf[off]) << 56) | (uint64(buf[off+1]) << 48) |
+			(uint64(buf[off+2]) << 40) | (uint64(buf[off+3]) << 32) |
+			(uint64(buf[off+4]) << 24) | (uint64(buf[off+5]) << 16) |
 			(uint64(buf[off+6]) << 8) | uint64(buf[off+7])
 		return math.Float64frombits(v), nil
 	}
@@ -424,14 +424,14 @@ func UnpackRawBuffer(buf []byte, offset *uint32) (val []byte, err error) {
 		return nil, err
 	}
 
-	if uint8(header & 0xE0) == MP_FIXRAW {
-		length := uint32(header - MP_FIXRAW);
+	if uint8(header&0xE0) == MP_FIXRAW {
+		length := uint32(header - MP_FIXRAW)
 		off := *offset
-		(*offset) += length		
+		(*offset) += length
 		if int(*offset) > len(buf) {
 			return nil, ErrUnpackOverflow
 		}
-		return buf[off:off+length], nil
+		return buf[off : off+length], nil
 	} else if header == MP_RAW16 {
 		off := *offset
 		(*offset) += 2
@@ -444,7 +444,7 @@ func UnpackRawBuffer(buf []byte, offset *uint32) (val []byte, err error) {
 		if int(*offset) > len(buf) {
 			return nil, ErrUnpackOverflow
 		}
-		return buf[off:off+length], nil
+		return buf[off : off+length], nil
 	} else if header == MP_RAW32 {
 		off := *offset
 		(*offset) += 4
@@ -454,11 +454,11 @@ func UnpackRawBuffer(buf []byte, offset *uint32) (val []byte, err error) {
 		length := (uint32(buf[off]) << 24) | (uint32(buf[off+1]) << 16) |
 			(uint32(buf[off+2]) << 8) | uint32(buf[off+3])
 		off = *offset
-		(*offset) += length		
+		(*offset) += length
 		if int(*offset) > len(buf) {
 			return nil, ErrUnpackOverflow
 		}
-		return buf[off:off+length], nil
+		return buf[off : off+length], nil
 	}
 
 	return nil, errors.New("invalid type header" + string(header))
