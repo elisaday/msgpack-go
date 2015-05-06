@@ -282,25 +282,184 @@ func UnpackInt64(buf []byte, offset *uint32) (val int64, err error) {
 }
 
 func UnpackUInt32(buf []byte, offset *uint32) (val uint32, err error) {
-	return 0, nil
+	header, err := unpackHeader(buf, offset)
+	if err != nil {
+		return 0, err
+	}
+
+	if header <= MAX_7BIT {
+		return uint32(header), nil
+	}
+
+	off := *offset
+
+	switch header {
+	case MP_UINT8:
+		(*offset)++
+		if int(*offset) > len(buf) {
+			return 0, ErrUnpackOverflow
+		}
+		return uint32(buf[off]), nil
+	case MP_UINT16:
+		(*offset) += 2
+		if int(*offset) > len(buf) {
+			return 0, ErrUnpackOverflow
+		}
+		return (uint32(buf[off]) << 8) | uint32(buf[off+1]), nil
+	case MP_UINT32:
+		(*offset) += 4
+		if int(*offset) > len(buf) {
+			return 0, ErrUnpackOverflow
+		}
+		return (uint32(buf[off]) << 24) | (uint32(buf[off+1]) << 16) |
+			(uint32(buf[off+2]) << 8) | uint32(buf[off+3]), nil
+	default:
+		return 0, errors.New("invalid type header" + string(header))
+	}
 }
 
 func UnpackInt32(buf []byte, offset *uint32) (val int32, err error) {
-	return 0, nil
+	header, err := unpackHeader(buf, offset)
+	if err != nil {
+		return 0, err
+	}
+
+	if header <= MAX_7BIT {
+		return int32(header), nil
+	}
+
+	if (header & MP_NEGATIVE_FIXNUM) == MP_NEGATIVE_FIXNUM {
+		return int32(header&0x1f) - 32, nil
+	}
+
+	off := *offset
+
+	switch header {
+	case MP_INT8:
+		(*offset)++
+		if int(*offset) > len(buf) {
+			return 0, ErrUnpackOverflow
+		}
+		return int32(int8(buf[off])), nil
+	case MP_INT16:
+		(*offset) += 2
+		if int(*offset) > len(buf) {
+			return 0, ErrUnpackOverflow
+		}
+		return int32((int16(buf[off]) << 8) | int16(buf[off+1])), nil
+	case MP_INT32:
+		(*offset) += 4
+		if int(*offset) > len(buf) {
+			return 0, ErrUnpackOverflow
+		}
+		return (int32(buf[off]) << 24) | (int32(buf[off+1]) << 16) |
+			(int32(buf[off+2]) << 8) | int32(buf[off+3]), nil
+	default:
+		return 0, errors.New("invalid type header" + string(header))
+	}
 }
 
 func UnpackBool(buf []byte, offset *uint32) (val bool, err error) {
-	return true, nil
+	header, err := unpackHeader(buf, offset)
+	if err != nil {
+		return false, err
+	}
+
+	if header == MP_TRUE {
+		return true, nil
+	} else if header == MP_FALSE {
+		return false, nil
+	}
+
+	return false, errors.New("invalid type header" + string(header))
 }
 
 func UnpackFloat(buf []byte, offset *uint32) (val float32, err error) {
-	return 0, nil
+	header, err := unpackHeader(buf, offset)
+	if err != nil {
+		return 0, err
+	}
+
+	if header == MP_FLOAT {
+		off := *offset
+		(*offset) += 4
+		if int(*offset) > len(buf) {
+			return 0, ErrUnpackOverflow
+		}
+
+		v := (uint32(buf[off]) << 24) | (uint32(buf[off+1]) << 16) | 
+			(uint32(buf[off+2]) << 8) | uint32(buf[off+3])
+		return math.Float32frombits(v), nil
+	}
+
+	return 0, errors.New("invalid type header" + string(header))
 }
 
 func UnpackDouble(buf []byte, offset *uint32) (val float64, err error) {
-	return 0, nil
+	header, err := unpackHeader(buf, offset)
+	if err != nil {
+		return 0, err
+	}
+
+	if header == MP_DOUBLE {
+		off := *offset
+		(*offset) += 8
+		if int(*offset) > len(buf) {
+			return 0, ErrUnpackOverflow
+		}
+
+		v := (uint64(buf[off]) << 56) | (uint64(buf[off+1]) << 48) | 
+			(uint64(buf[off+2]) << 40) | (uint64(buf[off+3]) << 32) | 
+			(uint64(buf[off+4]) << 24) | (uint64(buf[off+5]) << 16) | 
+			(uint64(buf[off+6]) << 8) | uint64(buf[off+7])
+		return math.Float64frombits(v), nil
+	}
+
+	return 0, errors.New("invalid type header" + string(header))
 }
 
 func UnpackRawBuffer(buf []byte, offset *uint32) (val []byte, err error) {
-	return nil, nil
+	header, err := unpackHeader(buf, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	if uint8(header & 0xE0) == MP_FIXRAW {
+		length := uint32(header - MP_FIXRAW);
+		off := *offset
+		(*offset) += length		
+		if int(*offset) > len(buf) {
+			return nil, ErrUnpackOverflow
+		}
+		return buf[off:off+length], nil
+	} else if header == MP_RAW16 {
+		off := *offset
+		(*offset) += 2
+		if int(*offset) > len(buf) {
+			return nil, ErrUnpackOverflow
+		}
+		length := (uint32(buf[off]) << 8) | uint32(buf[off+1])
+		off = *offset
+		(*offset) += length
+		if int(*offset) > len(buf) {
+			return nil, ErrUnpackOverflow
+		}
+		return buf[off:off+length], nil
+	} else if header == MP_RAW32 {
+		off := *offset
+		(*offset) += 4
+		if int(*offset) > len(buf) {
+			return nil, ErrUnpackOverflow
+		}
+		length := (uint32(buf[off]) << 24) | (uint32(buf[off+1]) << 16) |
+			(uint32(buf[off+2]) << 8) | uint32(buf[off+3])
+		off = *offset
+		(*offset) += length		
+		if int(*offset) > len(buf) {
+			return nil, ErrUnpackOverflow
+		}
+		return buf[off:off+length], nil
+	}
+
+	return nil, errors.New("invalid type header" + string(header))
 }
